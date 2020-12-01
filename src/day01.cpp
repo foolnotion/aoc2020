@@ -10,15 +10,6 @@ auto find_terms(std::vector<int> const& values, int n, int64_t sum, int64_t prod
     EXPECT(n >= 2);
     EXPECT(sum > 0);
 
-    std::vector<int> pair(n);
-    std::vector<gsl::span<const int>> ranges(n);
-
-    for (int i = 0; i < n; ++i) {
-        ranges[i] = gsl::span<const int>(values.data() + i, values.size() - n + i);
-    }
-
-    auto [min_elem, max_elem] = std::minmax_element(values.begin(), values.end());
-
     if (n == 2) {
         for (auto x : values) {
             auto y = sum - x;
@@ -27,12 +18,11 @@ auto find_terms(std::vector<int> const& values, int n, int64_t sum, int64_t prod
                 return std::make_optional(x * y * product);
             }
         }
-        return std::nullopt;
     } else if (n > 2) {
-        for (auto v : values) {
-            if (v > sum - *min_elem) continue;
+        for (auto x : values) {
+            if (x > sum) continue;
 
-            if (auto res = find_terms(values, n - 1, sum - v, v * product); res.has_value()) {
+            if (auto res = find_terms(values, n - 1, sum - x, x * product); res.has_value()) {
                 return res;
             }
         }
