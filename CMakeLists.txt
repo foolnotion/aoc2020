@@ -6,7 +6,7 @@ include(FeatureSummary)
 project(
     aoc2020 
     VERSION 0.1
-    DESCRIPTION "Advent of Code 2019"
+    DESCRIPTION "Advent of Code 2020"
     LANGUAGES CXX
 )
 

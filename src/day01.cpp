@@ -1,6 +1,9 @@
+#define ANKERL_NANOBENCH_IMPLEMENT
 #include "advent.hpp"
 #include "util.hpp"
 #include <functional>
+
+#include "nanobench.h"
 
 auto find_terms(std::vector<int> const& values, int n, int64_t sum, int64_t product = 1) -> std::optional<int64_t>
 {
@@ -17,29 +20,14 @@ auto find_terms(std::vector<int> const& values, int n, int64_t sum, int64_t prod
     auto [min_elem, max_elem] = std::minmax_element(values.begin(), values.end());
 
     if (n == 2) {
-        bool found = false;
-        // do a cartesian product
-        auto next_pair = [&](int i, auto&& next_pair) {
-            if (found) return;
+        for (auto x : values) {
+            auto y = sum - x;
 
-            if (i == pair.size()) {
-                auto s = std::reduce(pair.begin(), pair.end(), 0, std::plus {});
-
-                if (s == sum) {
-                    auto p = std::reduce(pair.begin(), pair.end(), 1ll, std::multiplies {});
-                    found = true;
-                    product *= p;
-                    return;
-                }
-            };
-            for (auto v : ranges[i]) {
-                if (v > sum) continue;
-                pair[i] = v;
-                next_pair(i + 1, next_pair);
+            if (std::binary_search(values.begin(), values.end(), y)) {
+                return std::make_optional(x * y * product);
             }
-        };
-        next_pair(0, next_pair);
-        return found ? std::make_optional(product) : std::nullopt;
+        }
+        return std::nullopt;
     } else if (n > 2) {
         for (auto v : values) {
             if (v > sum - *min_elem) continue;
@@ -88,11 +76,16 @@ int day01(int argc, char** argv)
     std::sort(values.begin(), values.end());
 
     auto res = find_terms(values, n, s);
+
     if (res.has_value()) {
         fmt::print("{}-term product = {}\n", n, res.value());
     } else {
         fmt::print("unable to find {}-term combination summing up to {}\n", n, s);
     }
+
+    fmt::print("performance benchmark:\n");
+    ankerl::nanobench::Bench b;
+    b.run("day01", [&]() { find_terms(values, n, s); });
 
     return 0;
 }
