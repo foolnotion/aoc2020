@@ -2,9 +2,10 @@
 #include "util.hpp"
 #include <functional>
 
-auto find_terms(std::vector<int> const& values, int n, int sum, int product = 1) -> std::optional<int>
+auto find_terms(std::vector<int> const& values, int n, int64_t sum, int64_t product = 1) -> std::optional<int64_t>
 {
     EXPECT(n >= 2);
+    EXPECT(sum > 0);
 
     std::vector<int> pair(n);
     std::vector<gsl::span<const int>> ranges(n);
@@ -25,7 +26,7 @@ auto find_terms(std::vector<int> const& values, int n, int sum, int product = 1)
                 auto s = std::reduce(pair.begin(), pair.end(), 0, std::plus {});
 
                 if (s == sum) {
-                    auto p = std::reduce(pair.begin(), pair.end(), 1, std::multiplies {});
+                    auto p = std::reduce(pair.begin(), pair.end(), 1ll, std::multiplies {});
                     found = true;
                     product *= p;
                     return;
@@ -88,9 +89,9 @@ int day01(int argc, char** argv)
 
     auto res = find_terms(values, n, s);
     if (res.has_value()) {
-        fmt::print("product = {}\n", res.value());
+        fmt::print("{}-term product = {}\n", n, res.value());
     } else {
-        fmt::print("unable to find {n}-term combination summing up to {}\n", n, s);
+        fmt::print("unable to find {}-term combination summing up to {}\n", n, s);
     }
 
     return 0;
