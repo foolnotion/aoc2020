@@ -23,6 +23,7 @@
 #include <type_traits>
 
 #include <gsl/assert>
+#include <gsl/span>
 
 #define EXPECT(cond) \
     if(GSL_UNLIKELY(!(cond))) \

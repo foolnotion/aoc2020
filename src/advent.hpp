@@ -3,7 +3,6 @@
 
 #include "bitstuff.hpp"
 #include "util.hpp"
-#include "intcode.hpp"
 
 int day01(int argc, char** argv);
 int day02(int argc, char** argv);
