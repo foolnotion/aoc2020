@@ -37,7 +37,7 @@ int day02(int argc, char** argv)
         n1 += (counts[i] >= lo && counts[i] <= hi);
         char a = pass[lo-1];
         char b = pass[hi-1];
-        n2 += (a != b) && (a == l || b == l);
+        n2 += (a == l) != (b == l);
     }
     fmt::print("valid part 1: {}\n", n1);
     fmt::print("valid part 2: {}\n", n2);
