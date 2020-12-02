@@ -7,8 +7,9 @@
 
 auto find_terms(std::vector<int> const& values, int n, int64_t sum, int64_t product = 1) -> std::optional<int64_t>
 {
-    EXPECT(n >= 2);
-    EXPECT(sum > 0);
+    if (sum <= 0) {
+        return std::nullopt;
+    }
 
     if (n == 2) {
         for (auto x : values) {
