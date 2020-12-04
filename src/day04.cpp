@@ -98,42 +98,41 @@ int day04(int argc, char** argv)
     std::ifstream in(argv[1]);
     std::string line;
 
+    std::vector<std::string_view> fields;
+
+    auto validate_entry = [&](std::string_view entry) {
+        // validate passport entry
+        fields.clear();
+        int pos = 0;
+        while (pos < entry.size()) {
+            if (pos = entry.find(':', pos+1); pos != -1) {
+                auto field = std::string_view(entry.data() + pos - 3, 3);
+                auto pos1 = entry.find(' ', pos+1);
+                if (pos1 == -1) pos1 = entry.size();
+                auto value = std::string_view(entry.data() + pos + 1, pos1 - pos - 1);
+                auto it = validation_rules.find(field);
+
+                if (it != validation_rules.end() && it->second(value))
+                    fields.push_back(field);
+            }
+        }
+        std::sort(begin(fields), end(fields));
+        return std::all_of(begin(required_fields), end(required_fields), [&](auto const& f) { 
+                return std::binary_search(begin(fields), end(fields), f);
+                });
+    };
+
     fmt::memory_buffer buf;
     bool space = false;
-    std::vector<std::string_view> fields;
     int valid_entries = 0;
     while (std::getline(in, line)) {
         if (line.empty() && buf.size() > 0) {
-            // validate passport entry
-            fields.clear();
             std::string_view entry(buf.data(), buf.size()); 
-            int pos = 0;
-            while (pos < entry.size()) {
-                if (pos = entry.find(':', pos+1); pos != -1) {
-                    auto field = std::string_view(entry.data() + pos - 3, 3);
-
-                    if (auto pos1 = entry.find(' ', pos+1)) {
-                        if (pos1 == -1) pos1 = entry.size();
-                        auto value = std::string_view(entry.data() + pos + 1, pos1 - pos - 1);
-                        auto it = validation_rules.find(field);
-
-                        // check if field value is valid
-                        if (it != validation_rules.end()) {
-                            auto v = it->second(value);
-                            if (v) fields.push_back(field);
-                        }
-                    }
-                }
-            }
-            std::sort(begin(fields), end(fields));
-            valid_entries += std::all_of(begin(required_fields), end(required_fields), [&](auto const& f) { 
-                    return std::binary_search(begin(fields), end(fields), f);
-                    });
+            valid_entries += validate_entry(entry); 
             // encountered an empty line, reset the buffer
             buf.clear();
-        } else if (buf.size() > 0) {
-            fmt::format_to(buf, "{}", ' '); 
-        }
+        } 
+        fmt::format_to(buf, "{}", buf.size() > 0 ? " " : ""); 
         for (auto c : line) {
             if (std::isspace(c)) {
                 space = true;
