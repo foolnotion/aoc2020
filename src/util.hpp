@@ -40,7 +40,7 @@
     }
 
 template <typename T>
-static std::optional<T> parse_number(const std::string& s)
+static std::optional<T> parse_number(std::string_view s)
 {
     static_assert(std::is_arithmetic_v<T>);
     T result;
@@ -48,6 +48,18 @@ static std::optional<T> parse_number(const std::string& s)
         return { result };
     }
     return {};
+}
+
+template <typename T>
+static std::optional<T> parse_number(std::string const& s)
+{
+    return parse_number<T>(std::string_view(s));
+}
+
+template <typename T>
+static std::optional<T> parse_number(char const* p)
+{
+    return parse_number<T>(std::string_view(p));
 }
 
 static std::vector<std::string> split(const std::string& s, char delimiter)
