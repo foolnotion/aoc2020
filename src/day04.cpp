@@ -104,11 +104,11 @@ int day04(int argc, char** argv)
     int valid_entries = 0;
     while (std::getline(in, line)) {
         if (line.empty()) {
-            int pos = 0;
             if (buf.size() > 0) {
                 // validate passport entry
                 fields.clear();
                 std::string_view entry(buf.data(), buf.size()); 
+                int pos = 0;
                 while (pos < entry.size()) {
                     if (pos = entry.find(':', pos+1); pos != -1) {
                         auto field = std::string_view(entry.data() + pos - 3, 3);
@@ -121,17 +121,15 @@ int day04(int argc, char** argv)
                             // check if field value is valid
                             if (it != validation_rules.end()) {
                                 auto v = it->second(value);
-                                if (v)
-                                    fields.push_back(field);
+                                if (v) fields.push_back(field);
                             }
                         }
                     }
                 }
                 std::sort(begin(fields), end(fields));
-                bool valid = std::all_of(begin(required_fields), end(required_fields), [&](auto const& f) { 
+                valid_entries += std::all_of(begin(required_fields), end(required_fields), [&](auto const& f) { 
                     return std::binary_search(begin(fields), end(fields), f);
                 });
-                valid_entries += valid;
             }
             // encountered an empty line, reset the buffer
             buf.clear();
