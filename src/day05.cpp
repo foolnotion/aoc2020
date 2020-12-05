@@ -4,6 +4,7 @@
 #include "advent.hpp"
 #include "util.hpp"
 #include <functional>
+#include <bitset>
 
 #include "nanobench.h"
 
@@ -22,32 +23,12 @@ int day05(int argc, char** argv)
     std::vector<int> ids;
 
     while(std::getline(in, line)) {
-        int row[2] = { 0, 127 };
-        int col[2] = { 0, 7 };
-
-        for (auto ch : line) {
-            switch(ch) {
-                case 'F':
-                    row[1] = row[0] + (row[1] - row[0]) / 2;
-                    break;
-
-                case 'B':
-                    row[0] = row[0] + (row[1] - row[0]) / 2 + 1;
-                    break;
-
-                case 'L':
-                    col[1] = col[0] + (col[1] - col[0]) / 2;
-                    break;
-
-                case 'R':
-                    col[0] = col[0] + (col[1] - col[0]) / 2 + 1;
-                    break;
-            }
+        std::bitset<10> bits;
+        size_t i = 10;
+        for (auto c : line) {
+            bits[--i] = (c == 'R' || c == 'B');
         }
-        int r = std::min(row[0], row[1]);
-        int c = std::min(col[0], col[1]);
-        int id = r * sizeof(col) + c;
-
+        int id = bits.to_ulong();
         maxID = std::max(id, maxID);
         ids.push_back(id);
     }
