@@ -1,9 +1,6 @@
-#define ANKERL_NANOBENCH_IMPLEMENT
 #include "advent.hpp"
 #include "util.hpp"
 #include <functional>
-
-#include "nanobench.h"
 
 int day03(int argc, char** argv)
 {
