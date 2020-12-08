@@ -126,7 +126,7 @@ int day08(int argc, char** argv)
                 auto idx1 = idx;
                 struct vm vm1(vm);
                 if (vm1.run(idx1)) {
-                    return std::make_optional(vm1.A);
+                    return { vm1.A };
                 }
                 in.op = op_old;
             }
