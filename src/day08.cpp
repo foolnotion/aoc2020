@@ -53,6 +53,20 @@ struct vm {
         return true;
     }
 
+    bool run(gsl::span<int> indices) {
+        while (true) {
+            if(!indices[P]) {
+                indices[P] = true;
+                step();
+                if (terminated_normally()) {
+                    return true;
+                }
+                continue;
+            }
+            return false;
+        }
+    }
+
     bool terminated_normally() const { return P >= code.size(); }
 
     void reset() { A = 0; P = 0; }
@@ -92,99 +106,49 @@ int day08(int argc, char** argv)
 
     vm vm(code);
 
-    auto execute = [](struct vm& vm) {
-        vm.reset();
-        std::vector<int> indices(vm.code.size(), false);
-        while (true) {
-            if(!indices[vm.P]) {
-                indices[vm.P] = true;
-                vm.step();
-                if (vm.terminated_normally()) {
-                    return true;
-                }
-                continue;
-            }
-            return false;
-        }
-    };
-
-    execute(vm);
+    std::vector<int> idx(code.size(), false);
+    vm.run(idx); 
     fmt::print("part 1: {}\n", vm.A);
 
-    auto part2_brute_force = [&]() -> std::optional<int> {
-        for (auto& in : code) {
-            if (!(in.op == opcode::JMP || in.op == opcode::NOP)) {
-                continue;
-            }
+    int ip = 0;
 
-            auto op_old = in.op;
-            auto op_new = in.op == opcode::JMP ? opcode::NOP : opcode::JMP;
-
-            in.op = op_new;
-            int res = execute(vm);
-            in.op = op_old;
-            if (res) {
-                return std::make_optional(vm.A);
-            }
-        }
-        return std::nullopt;
-    };
-
-
-    auto part2_optimized = [&]() -> std::optional<int> {
+    auto part2 = [&]() -> std::optional<int> {
         vm.reset();
-        std::vector<int> cycle;
-        std::vector<bool> idx(vm.code.size(), false);
+        std::fill(idx.begin(), idx.end(), false);
+
         while (true) {
-            if (vm.code[vm.P].op == opcode::JMP) {
-                if (idx[vm.P])
-                {
-                    std::rotate(rbegin(cycle), rbegin(cycle) + 1, rend(cycle));
-                    break;
+            auto &in = vm.code[vm.P];
+            if (in.op == opcode::JMP || in.op == opcode::NOP) {
+                auto op_old = in.op;
+                auto op_new = in.op == opcode::JMP ? opcode::NOP : opcode::JMP;
+
+                in.op = op_new;
+                auto idx1 = idx;
+                struct vm vm1(vm);
+                if (vm1.run(idx1)) {
+                    return std::make_optional(vm1.A);
                 }
-                cycle.push_back(vm.P);
-                idx[vm.P] = true;
+                in.op = op_old;
             }
-
-            //if (vm.code[vm.P].op == opcode::NOP) {
-            //    cycle.push_back(vm.P);
-            //}
+            idx[vm.P] = true;
             vm.step();
-        };
-        //fmt::print("cycle: ");
-        //for (auto n : cycle) fmt::print("{} ", n);
-        //fmt::print("\n");
-        for (auto it = rbegin(cycle); it != rend(cycle); ++it) {
-            vm.reset();
-            auto &in = vm.code[*it];
-            if (!(in.op == opcode::JMP || in.op == opcode::NOP)) {
-                continue;
-            }
-
-            auto op_old = in.op;
-            auto op_new = in.op == opcode::JMP ? opcode::NOP : opcode::JMP;
-
-            in.op = op_new;
-            auto res = execute(vm);
-            in.op = op_old;
-            if (res) {
-                return std::make_optional(vm.A);
+            if (vm.terminated_normally()) {
+                return { vm.A };
             }
         }
         return std::nullopt;
     };
-
-    auto p2_brute = part2_brute_force();
-    auto p2_optim = part2_optimized();
-
-    if (p2_brute.has_value()) fmt::print("part 2 (brute): {}\n", p2_brute.value());
-    if (p2_optim.has_value()) fmt::print("part 2 (optim): {}\n", p2_optim.value());
+    auto res = part2();
+    if (res.has_value()) { 
+        fmt::print("part 2: {}\n", res.value());
+    } else {
+        fmt::print("part 2 no solution\n");
+    }
 
     // performance benchmark
     ankerl::nanobench::Bench b;
-    b.relative(true).performanceCounters(true).minEpochIterations(10);
-    b.run("day8 brute-force", part2_brute_force);
-    b.run("day8 optimized", part2_optimized);
+    b.performanceCounters(true).minEpochIterations(10);
+    b.run("day8 perf", part2);
 
     return 0;
 }
