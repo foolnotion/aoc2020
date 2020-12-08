@@ -3,13 +3,13 @@ let
   pkgs = import <nixos-unstable> { sandbox = false; };
 
   eigen_trunk = pkgs.eigen.overrideAttrs (old: rec {
-    version = "3.3.8";
+    version = "3.3.9";
     stdenv = pkgs.gcc10Stdenv;
     src = pkgs.fetchFromGitLab {
       owner = "libeigen";
       repo = "eigen";
       rev    = "${version}";
-      sha256 = "1mrvcwnvwbwbm60ss7415sdgja6dq4bjcgvlc2zqmm6jycqhs9gn";
+      sha256 = "0m4h9fd5s1pzpncy17r3w0b5a6ywqjajmnr720ndb7fc4bn0dhi4";
     };
     patches = [ ./eigen_include_dir.patch ];
   });
