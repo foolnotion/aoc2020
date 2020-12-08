@@ -117,6 +117,10 @@ int day08(int argc, char** argv)
         std::fill(idx.begin(), idx.end(), false);
 
         while (true) {
+            if (idx[vm.P]) {
+                break;
+            }
+
             auto &in = vm.code[vm.P];
             if (in.op == opcode::JMP || in.op == opcode::NOP) {
                 auto op_old = in.op;
