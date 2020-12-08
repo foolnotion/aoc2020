@@ -28,7 +28,11 @@ struct vm {
     vm(gsl::span<instruction> _code) : A{0}, P{0}, code(_code) {}
     vm(vm const& other) : A(other.A), P(other.P), code(other.code) {}
 
-    void step() {
+    bool step() {
+        if (P >= code.size()) {
+            return false;
+        }
+
         auto in = code[P++];
 
         switch(in.op) {
@@ -42,6 +46,8 @@ struct vm {
                 // do nothing
                 break;
         };
+
+        return true;
     }
 
     bool terminated_normally() const { return P >= code.size(); }
