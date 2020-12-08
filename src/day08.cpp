@@ -4,6 +4,9 @@
 #include <functional>
 #include <bitset>
 
+#define ANKERL_NANOBENCH_IMPLEMENT
+#include "nanobench.h"
+
 enum class opcode : int { ACC, JMP, NOP };
 std::string names[] { "acc", "jmp", "nop" };
 
@@ -91,9 +94,10 @@ int day08(int argc, char** argv)
 
     auto execute = [](struct vm& vm) {
         vm.reset();
-        std::unordered_set<int> indices;
+        std::vector<int> indices(vm.code.size(), false);
         while (true) {
-            if(auto [it, ok] = indices.insert(vm.P); ok) {
+            if(!indices[vm.P]) {
+                indices[vm.P] = true;
                 vm.step();
                 if (vm.terminated_normally()) {
                     return true;
@@ -107,20 +111,80 @@ int day08(int argc, char** argv)
     execute(vm);
     fmt::print("part 1: {}\n", vm.A);
 
-    for (auto& in : code) {
-        if (!(in.op == opcode::JMP || in.op == opcode::NOP)) {
-            continue;
-        }
+    auto part2_brute_force = [&]() -> std::optional<int> {
+        for (auto& in : code) {
+            if (!(in.op == opcode::JMP || in.op == opcode::NOP)) {
+                continue;
+            }
 
-        auto op_old = in.op;
-        auto op_new = in.op == opcode::JMP ? opcode::NOP : opcode::JMP;
+            auto op_old = in.op;
+            auto op_new = in.op == opcode::JMP ? opcode::NOP : opcode::JMP;
 
-        in.op = op_new;
-        if (execute(vm)) {
-            fmt::print("part 2: {}\n", vm.A);
-            break;
+            in.op = op_new;
+            int res = execute(vm);
+            in.op = op_old;
+            if (res) {
+                return std::make_optional(vm.A);
+            }
         }
-        in.op = op_old;
-    }
+        return std::nullopt;
+    };
+
+
+    auto part2_optimized = [&]() -> std::optional<int> {
+        vm.reset();
+        std::vector<int> cycle;
+        std::vector<bool> idx(vm.code.size(), false);
+        while (true) {
+            if (vm.code[vm.P].op == opcode::JMP) {
+                if (idx[vm.P])
+                {
+                    std::rotate(rbegin(cycle), rbegin(cycle) + 1, rend(cycle));
+                    break;
+                }
+                cycle.push_back(vm.P);
+                idx[vm.P] = true;
+            }
+
+            //if (vm.code[vm.P].op == opcode::NOP) {
+            //    cycle.push_back(vm.P);
+            //}
+            vm.step();
+        };
+        //fmt::print("cycle: ");
+        //for (auto n : cycle) fmt::print("{} ", n);
+        //fmt::print("\n");
+        for (auto it = rbegin(cycle); it != rend(cycle); ++it) {
+            vm.reset();
+            auto &in = vm.code[*it];
+            if (!(in.op == opcode::JMP || in.op == opcode::NOP)) {
+                continue;
+            }
+
+            auto op_old = in.op;
+            auto op_new = in.op == opcode::JMP ? opcode::NOP : opcode::JMP;
+
+            in.op = op_new;
+            auto res = execute(vm);
+            in.op = op_old;
+            if (res) {
+                return std::make_optional(vm.A);
+            }
+        }
+        return std::nullopt;
+    };
+
+    auto p2_brute = part2_brute_force();
+    auto p2_optim = part2_optimized();
+
+    if (p2_brute.has_value()) fmt::print("part 2 (brute): {}\n", p2_brute.value());
+    if (p2_optim.has_value()) fmt::print("part 2 (optim): {}\n", p2_optim.value());
+
+    // performance benchmark
+    ankerl::nanobench::Bench b;
+    b.relative(true).performanceCounters(true).minEpochIterations(10);
+    b.run("day8 brute-force", part2_brute_force);
+    b.run("day8 optimized", part2_optimized);
+
     return 0;
 }
