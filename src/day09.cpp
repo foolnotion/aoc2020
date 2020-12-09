@@ -48,36 +48,29 @@ int day09(int argc, char** argv)
     };
 
     auto part2 = [&](uint64_t target) -> std::optional<uint64_t> {
-        std::vector<uint64_t> sum(vec.size());
-        std::inclusive_scan(vec.begin(), vec.end(), sum.begin());
+        auto l = vec.begin();
+        auto r = vec.begin();
+        auto total = uint64_t{0};
 
-        // we need to find two terms a, b in the cummulative sum such that a < b and b - a = target
-        for (size_t i = 0; i < sum.size(); ++i) {
-            auto a = sum[i];
-            auto b = target + a;
-
-            if (auto it = std::lower_bound(sum.begin(), sum.end(), b); it != sum.end() && *it == b) {
-                auto j = std::distance(sum.begin(), it);
-                std::vector<uint64_t> range(vec.begin() + i + 1, vec.begin() + j + 1);
-                auto [min, max] = std::minmax_element(range.begin(), range.end());
-                return { *min + *max };
-            }
+        while (total != target || r - l < 2) {
+            total = total < target ? total + *r++ : total - *l++;
         }
+        auto [min, max] = std::minmax_element(l, r);
+        return { *min + *max };
+
         return std::nullopt;
     };
 
     auto p1 = part1();
+    auto p2 = part2(p1.value());
 
-    auto target = p1.value();
-    auto p2 = part2(target);
-
-    fmt::print("part 1: {}\n", target);
+    fmt::print("part 1: {}\n", p1.value());
     fmt::print("part 2: {}\n", p2.value());
 
     ankerl::nanobench::Bench b;
     b.performanceCounters(true).minEpochIterations(100);
     b.run("part 1", [&]() { part1(); });
-    b.run("part 2", [&]() { part2(target); });
+    b.run("part 2", [&]() { part2(p1.value()); });
 
     return 0;
 }
