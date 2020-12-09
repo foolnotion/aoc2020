@@ -41,12 +41,20 @@ FetchContent_Declare(
     DOWNLOAD_NO_EXTRACT 1
 )
 
-FetchContent_MakeAvailable(xxhash gsl nanobench)
+FetchContent_Declare(
+    robin_hood
+    DOWNLOAD_DIR ${PROJECT_SOURCE_DIR}/thirdparty/robin_hood
+    URL https://raw.githubusercontent.com/martinus/robin-hood-hashing/3.9.1/src/include/robin_hood.h
+    DOWNLOAD_NO_EXTRACT 1
+)
+
+FetchContent_MakeAvailable(xxhash gsl nanobench robin_hood)
 
 set(THIRDPARTY_INCLUDE_DIRS
     ${PROJECT_SOURCE_DIR}/thirdparty/GSL/include
     ${PROJECT_SOURCE_DIR}/thirdparty/nanobench/include
     ${PROJECT_SOURCE_DIR}/thirdparty/xxhash
+    ${PROJECT_SOURCE_DIR}/thirdparty/robin_hood
     ${EIGEN3_INCLUDE_DIR}
     ${FMT_INCLUDE_DIRS}
 )

@@ -1,8 +1,9 @@
+#include <bitset>
+#include <functional>
 #include <fmt/format.h>
 #include "advent.hpp"
 #include "util.hpp"
-#include <functional>
-#include <bitset>
+#include "robin_hood.h"
 
 #define ANKERL_NANOBENCH_IMPLEMENT
 #include "nanobench.h"
@@ -27,7 +28,7 @@ int day09(int argc, char** argv)
     int preamble = parse_number<int>(argv[2]).value();
 
     auto part1 = [&]() -> std::optional<uint64_t> {
-        std::unordered_set<uint64_t> values(vec.begin(), vec.begin() + preamble);
+        robin_hood::unordered_set<uint64_t> values(vec.begin(), vec.begin() + preamble);
         for (auto it = vec.begin() + preamble; it != vec.end(); ++it) {
             bool has_sum = false;
             for (auto it2 = it - preamble; it2 < it; ++it2) {
