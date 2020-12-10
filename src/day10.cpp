@@ -81,7 +81,9 @@ int day10(int argc, char** argv)
 
         for(int i = u.size() - 2; i >= 0; --i) {
             for (size_t j = i + 1; j < u.size(); ++j) {
-                if (u[j] - u[i] <= 3) { counts[i] += counts[j]; }
+                if (u[j] - u[i] > 3)
+                    break;
+                counts[i] += counts[j];
             }
         }
         return counts.front(); 
