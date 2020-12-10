@@ -45,11 +45,9 @@ int day10(int argc, char** argv)
     std::copy(v.begin(), v.end(), std::back_inserter(u));
     u.push_back(u.back()+3);
 
-    std::cout << as_map(u).transpose() << "\n";
-
     auto get_intervals = [](gsl::span<int> u) {
         size_t i = 0, j = 0;
-        std::stack<gsl::span<int>> intervals;
+        std::vector<gsl::span<int>> intervals;
         while(i < u.size() && j <= u.size()) {
             j = i+1;
             while(j < u.size() && u[j] - u[i] <= 3) {
@@ -57,20 +55,18 @@ int day10(int argc, char** argv)
             }
 
             if (intervals.empty()) {
-                intervals.push({ u.data() + i, j - i });
+                intervals.push_back({ u.data() + i, j - i });
             } else {
-                auto iv = intervals.top();
-                intervals.pop();
+                auto iv = intervals.back();
 
                 auto a = iv.data() - u.data();
                 auto b = a + iv.size();
-
 
                 if (b > i) {
                     iv = gsl::span(iv.data(), iv.data() + j);
                 }
 
-                intervals.push(iv);
+                intervals.back() = iv;
             }
 
 
@@ -93,12 +89,7 @@ int day10(int argc, char** argv)
 
     auto part2_hyb = [&](gsl::span<int> u) -> uint64_t {
         auto intervals = get_intervals(u);
-        uint64_t p = 1;
-        while (!intervals.empty()) {
-            auto iv = intervals.top();
-            intervals.pop();
-            p *= part2(iv);
-        }
+        auto p = std::transform_reduce(intervals.begin(), intervals.end(), uint64_t{1}, std::multiplies{}, [&](auto iv) { return part2(iv); });
         return p;
     };
     auto p2_dyn = part2(u);
@@ -108,8 +99,9 @@ int day10(int argc, char** argv)
     fmt::print("part 2 (hyb): {}\n", p2_hyb);
 
     ankerl::nanobench::Bench bench;
-    bench.performanceCounters(true).run("part 2 dyn", [&]() { part2(u); });
-    bench.performanceCounters(true).run("part 2 dyn+hyb", [&]() { part2_hyb(u); });
+    bench.performanceCounters(true).minEpochIterations(10000);
+    bench.run("part 2 dyn", [&]() { part2(u); });
+    bench.run("part 2 dyn+hyb", [&]() { part2_hyb(u); });
 
     return 0;
 }
