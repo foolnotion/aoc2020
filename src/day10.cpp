@@ -45,39 +45,71 @@ int day10(int argc, char** argv)
     std::copy(v.begin(), v.end(), std::back_inserter(u));
     u.push_back(u.back()+3);
 
-    size_t i = 0, j = 0;
-    size_t i_prev = u.size(), j_prev = u.size();
-    std::stack<std::tuple<size_t, size_t, size_t>> intervals;
-    while(i < u.size() && j <= u.size()) {
-        j = i+1;
-        while(j < u.size() && u[j] - u[i] <= 3) {
-            ++j;
-        }
-        if (j - i > 2) {
-            auto w = j - i - 2; // interval width
+    std::cout << as_map(u).transpose() << "\n";
+
+    auto get_intervals = [](gsl::span<int> u) {
+        size_t i = 0, j = 0;
+        std::stack<gsl::span<int>> intervals;
+        while(i < u.size() && j <= u.size()) {
+            j = i+1;
+            while(j < u.size() && u[j] - u[i] <= 3) {
+                ++j;
+            }
+
             if (intervals.empty()) {
-                intervals.push({ u[i], u[j-1], w });
+                intervals.push({ u.data() + i, j - i });
             } else {
-                auto [a, b, c] = intervals.top();
-                if (u[i] < b) {
-                    // we have an intersection
-                    intervals.pop();
-                    intervals.push({ a, u[j-1], c + w - 1 }); // -1 because we have an intersection
-                } else {
-                    intervals.push({ u[i], u[j-1], w });
+                auto iv = intervals.top();
+                intervals.pop();
+
+                auto a = iv.data() - u.data();
+                auto b = a + iv.size();
+
+
+                if (b > i) {
+                    iv = gsl::span(iv.data(), iv.data() + j);
                 }
+
+                intervals.push(iv);
+            }
+
+
+            ++i;
+        }
+        return intervals;
+    };
+
+    auto part2 = [](gsl::span<int> u) -> uint64_t {
+        std::vector<uint64_t> counts(u.size(), 0);
+        counts.back() = 1;
+
+        for(int i = u.size() - 2; i >= 0; --i) {
+            for (size_t j = i + 1; j < u.size(); ++j) {
+                if (u[j] - u[i] <= 3) { counts[i] += counts[j]; }
             }
         }
-        ++i;
-    }
-    size_t p = 1;
-    while(intervals.size() > 0) {
-        auto [a, b, c] = intervals.top();
-        intervals.pop();
-        auto x = std::pow(2, c) - (b-a > 3);
-        p *= x;
-    }
-    fmt::print("part 2: {}\n", p);
+        return counts.front(); 
+    };
+
+    auto part2_hyb = [&](gsl::span<int> u) -> uint64_t {
+        auto intervals = get_intervals(u);
+        uint64_t p = 1;
+        while (!intervals.empty()) {
+            auto iv = intervals.top();
+            intervals.pop();
+            p *= part2(iv);
+        }
+        return p;
+    };
+    auto p2_dyn = part2(u);
+    auto p2_hyb = part2_hyb(u);
+
+    fmt::print("part 2 (dyn): {}\n", p2_dyn);
+    fmt::print("part 2 (hyb): {}\n", p2_hyb);
+
+    ankerl::nanobench::Bench bench;
+    bench.performanceCounters(true).run("part 2 dyn", [&]() { part2(u); });
+    bench.performanceCounters(true).run("part 2 dyn+hyb", [&]() { part2_hyb(u); });
 
     return 0;
 }
