@@ -46,31 +46,27 @@ int day10(int argc, char** argv)
     u.push_back(u.back()+3);
 
     auto get_intervals = [](gsl::span<int> u) {
-        size_t i = 0, j = 0;
         std::vector<gsl::span<int>> intervals;
-        while(i < u.size() && j <= u.size()) {
-            j = i+1;
+        for(size_t i = 0; i < u.size(); ++i) {
+            size_t j = i+1;
             while(j < u.size() && u[j] - u[i] <= 3) {
                 ++j;
             }
 
             if (intervals.empty()) {
                 intervals.push_back({ u.data() + i, j - i });
-            } else {
-                auto iv = intervals.back();
-
-                auto a = iv.data() - u.data();
-                auto b = a + iv.size();
-
-                if (b > i) {
-                    iv = gsl::span(iv.data(), iv.data() + j);
-                }
-
-                intervals.back() = iv;
+                continue;
             }
+            auto iv = intervals.back();
+            auto a = iv.data() - u.data();
+            auto b = a + iv.size();
 
-
-            ++i;
+            if (b > i) {
+                iv = gsl::span(iv.data(), j);
+                intervals.back() = iv;
+            } else {
+                intervals.push_back({ u.data() + i, j - i });
+            }
         }
         return intervals;
     };
