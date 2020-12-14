@@ -67,10 +67,8 @@ int day14(int argc, char** argv)
         }
         auto j = floating[i];
         for (auto b : { true, false }) {
-            auto x = bits[j];
             bits[j] = b;
             rec(v, i+1, rec);
-            bits[j] = x;
         }
     };
 
