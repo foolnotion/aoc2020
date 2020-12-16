@@ -40,7 +40,6 @@ int day16(int argc, char** argv)
 
     // parse valid ranges
     while (std::getline(in, line) && !line.empty()) {
-        //fmt::print("{}\n", line);
         auto p = line.find(':');
         std::string_view sv(line.data(), p);
         range_names.push_back(std::string(sv));
@@ -49,7 +48,6 @@ int day16(int argc, char** argv)
         int j = 0;
         while(line[i+j] != 'o') ++j;
         sv = std::string_view(line.data() + i, j-1);
-        //fmt::print("_{}_\n", sv);
 
         auto tok = split(std::string(sv), '-');
         auto a = parse_number<uint64_t>(tok[0]).value();
@@ -65,7 +63,6 @@ int day16(int argc, char** argv)
         range r2 { a, b };
 
         ranges.push_back({ r1, r2 });
-        //std::cout << range_names.back() << " " << r1 << " " << r2 << "\n";
     };
 
     std::vector<uint64_t> myticket;
@@ -87,24 +84,25 @@ int day16(int argc, char** argv)
         nearby.push_back(other);
     }
 
-    auto error_rate = 0ul;
     auto is_valid = [&](auto const& ticket) {
-        auto error_rate_old = error_rate;
+        auto error_rate = 0ul;
         for (auto v : ticket) {
             if (std::none_of(ranges.begin(), ranges.end(), [&](auto const& r) { return r[0].contains(v) || r[1].contains(v); })) {
                 error_rate += v;
             }
         }
-        return error_rate == error_rate_old;
+        return std::pair{ error_rate, error_rate == 0 };
     };
 
+    auto p1 = 0ul;
     for (auto const& t : nearby) {
-        is_valid(t);
+        auto [err, valid] = is_valid(t);
+        p1 += err;
     }
-    fmt::print("part 1: {}\n", error_rate);
+    fmt::print("part 1: {}\n", p1);
 
     std::vector<std::vector<uint64_t>> valid_tickets;
-    std::copy_if(nearby.begin(), nearby.end(), std::back_inserter(valid_tickets), [&](auto const& t) { return is_valid(t); });
+    std::copy_if(nearby.begin(), nearby.end(), std::back_inserter(valid_tickets), [&](auto const& t) { return is_valid(t).second; });
 
     Eigen::Matrix<uint64_t, -1, -1, Eigen::ColMajor> m(valid_tickets.size(), ranges.size());
     int row = 0;
@@ -140,8 +138,8 @@ int day16(int argc, char** argv)
         }
         return p;
     };
-    auto p = part2();
-    fmt::print("part 2: {}\n", p);
+    auto p2 = part2();
+    fmt::print("part 2: {}\n", p2);
 
     ankerl::nanobench::Bench b;
     b.performanceCounters(true).minEpochIterations(100);
