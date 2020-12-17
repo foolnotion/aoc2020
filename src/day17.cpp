@@ -96,10 +96,10 @@ int day17(int argc, char** argv)
                         auto s = get_cube(m, { i, j, k, l });
                         auto c = count_active(s) - (read_value(m, i, j, k, l) == '#');
 
-                        char v;
-                        if (m(i, j, k, l) == '#') {
+                        char v = read_value(m, i, j, k, l);
+                        if (v == '#') {
                             v = (c == 2 || c == 3) ? '#' : '.';
-                        } else if (m(i, j, k, l) == '.') {
+                        } else if (v == '.') {
                             v = (c == 3) ? '#' : '.';
                         }
                         write_value(m_new, v, i, j, k, l);
