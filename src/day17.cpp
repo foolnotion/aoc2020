@@ -25,13 +25,9 @@ template<typename T>
 T get_cube(T const& m, std::array<int, T::NumDimensions> coord) {
     constexpr int N = T::NumDimensions;
     for (int i = 0; i < N; ++i) coord[i]--;
-    Eigen::array<int, N> offsets = { coord };
-    Eigen::array<int, N> extents;
-    if constexpr(N == 3) {
-        extents = { N, N, N };
-    } else {
-        extents = { 3, 3, 3, 3 };
-    }
+    std::array<int, N> offsets = coord;
+    std::array<int, N> extents;
+    std::fill(extents.begin(), extents.end(), 3);
     T s = m.slice(offsets, extents);
     return s;
 }
@@ -88,10 +84,10 @@ int day17(int argc, char** argv)
     for (int step = 1; step <= STEPS; ++step) {
         r += 2;
         int o = mid - step - 1;
-        Eigen::array<int, N> offsets { o, o, o, o };
-        Eigen::array<int, N> extents { r, r, r, r };
+        std::array<int, N> offsets; std::fill(offsets.begin(), offsets.end(), o);
+        std::array<int, N> extents; std::fill(extents.begin(), extents.end(), r);
         Tensor current_region = m.slice(offsets, extents);
-        std::cout << "current region:\n" << current_region << "\n\n";
+        //std::cout << "current region:\n" << current_region << "\n\n";
 
         for (int i = o; i < o + r; ++i) {
             for (int j = o; j < o + r; ++j) {
