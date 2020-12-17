@@ -85,16 +85,17 @@ int day17(int argc, char** argv)
             for (int j = o; j < o + r; ++j) {
                 for (int k = o; k < o + r; ++k) {
                     for (int l = o; l < o + r; ++l) {
-                        auto s = get_cube(m, { i, j, k, l });
-                        auto c = count_active(s) - (read_value(m, i, j, k, l) == '#');
+                        std::array<int, N> coord { i, j, k, l };
+                        auto s = get_cube(m, coord);
+                        auto c = count_active(s) - (read_value(m, coord) == '#');
 
-                        char v = read_value(m, i, j, k, l);
+                        char v = read_value(m, coord);
                         if (v == '#') {
                             v = (c == 2 || c == 3) ? '#' : '.';
                         } else if (v == '.') {
                             v = (c == 3) ? '#' : '.';
                         }
-                        write_value(m_new, v, i, j, k, l);
+                        write_value(m_new, v, coord);
                     }
                 }
             }
