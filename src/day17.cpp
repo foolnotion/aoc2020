@@ -53,7 +53,7 @@ int day17(int argc, char** argv)
     using Tensor = Eigen::Tensor<char, N>;
 
     constexpr int STEPS = 6;
-    constexpr int R = 100;
+    constexpr int R = 24;
 
     fmt::print("N: {}, R: {}, M: {}\n", N, R, R/2);
 
@@ -74,20 +74,12 @@ int day17(int argc, char** argv)
         x = x + 1;
         y = -1;
     }
-    Eigen::array<int, Tensor::NumDimensions> center = { mid, mid, mid, mid };
-
-    Tensor s = get_cube(m, center);
     Tensor m_new = m;
-
     std::array<int, N> indices; std::fill(indices.begin(), indices.end(), 0);
 
     for (int step = 1; step <= STEPS; ++step) {
         r += 2;
         int o = mid - step - 1;
-        std::array<int, N> offsets; std::fill(offsets.begin(), offsets.end(), o);
-        std::array<int, N> extents; std::fill(extents.begin(), extents.end(), r);
-        Tensor current_region = m.slice(offsets, extents);
-        //std::cout << "current region:\n" << current_region << "\n\n";
 
         for (int i = o; i < o + r; ++i) {
             for (int j = o; j < o + r; ++j) {
@@ -107,8 +99,6 @@ int day17(int argc, char** argv)
                 }
             }
         }
-        Tensor new_region = m_new.slice(offsets, extents);
-        std::cout << "after " << step << " cycle(s):\n" << new_region << "\n\n";
         std::swap(m, m_new);
     }
     auto p1 = count_active(m);
