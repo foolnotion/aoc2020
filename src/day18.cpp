@@ -9,18 +9,6 @@
 #include "advent.hpp"
 #include "util.hpp"
 
-size_t apply_op(char op, size_t left, size_t right)
-{
-    switch (op) {
-    case '+':
-        return left + right;
-    case '*':
-        return left * right;
-    default:
-        throw std::runtime_error("unknown op");
-    }
-}
-
 constexpr char lparen = '(';
 constexpr char rparen = ')';
 constexpr char add = '+';
