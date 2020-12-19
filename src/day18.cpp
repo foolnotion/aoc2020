@@ -22,7 +22,6 @@ inline bool is(char c) { return ((c == args) || ...); }
 struct token {
     char symbol;
     int64_t value;
-    size_t precedence;
 };
 
 class parser {
@@ -33,11 +32,11 @@ class parser {
 
     token next_term()
     {
-        while (i < expr_.size() && std::isspace(expr_[i]))
+        while (i < expr_.size() && std::isspace(expr_[i])) {
             ++i;
+        }
 
         size_t j = i;
-
         while (j < expr_.size() && !std::isspace(expr_[j]) && !is<lparen, rparen, add, mul>(expr_[j])) {
             ++j;
         }
@@ -51,7 +50,7 @@ class parser {
             exit(1);
         }
         i = j;
-        return { term, res.value(), 0 };
+        return { term, res.value() };
     }
 
     token next_op()
@@ -61,7 +60,7 @@ class parser {
         char c = expr_[i++];
         EXPECT(!(is<lparen, rparen>(c)));
         EXPECT((is<add, mul>(c)));
-        return { c, 0, 0 };
+        return { c, 0 };
     }
 
     void parse()
@@ -156,15 +155,15 @@ public:
         int count = 0;
         std::stack<size_t> stk;
         for (size_t i = 0; i < tokens.size(); ++i) {
-            auto s = tokens[i].symbol;
-
-            if (is<lparen>(s)) {
+            switch (tokens[i].symbol) {
+            case lparen:
                 stk.push(i);
-            }
-            if (is<rparen>(s)) {
+                break;
+            case rparen:
                 auto last_l = stk.top();
                 stk.pop();
                 paren_pairs[last_l] = { last_l, i, std::nullopt };
+                break;
             }
         }
 
@@ -180,54 +179,46 @@ public:
             std::stack<char> operators;
 
             for (size_t k = i + 1; k < j; ++k) {
-                auto s = tokens[k].symbol;
-
-                if (is<lparen>(s)) {
-
+                switch (tokens[k].symbol) {
+                case lparen: {
                     terms.push(std::get<2>(paren_pairs[k]).value());
                     auto [start_idx, end_idx, _] = paren_pairs[k];
                     k += end_idx - start_idx - 1;
-
-                } else if (is<term>(s)) {
-
+                    break;
+                }
+                case term: {
                     terms.push(tokens[k].value);
-
-                } else if (is<add, mul>(s)) {
-
-                    operators.push(s);
+                    break;
+                }
+                case add:
+                case mul: {
+                    operators.push(tokens[k].symbol);
+                    break;
+                }
                 }
             }
 
             while (!operators.empty()) {
-                auto op1 = operators.top();
-                operators.pop();
+                auto op1 = operators.top(); operators.pop();
 
                 int64_t result;
                 if (operators.empty()) {
-                    auto term = terms.top();
-                    terms.pop();
+                    auto term = terms.top(); terms.pop();
                     result = eval_terms(op1, term);
-
                     while (!terms.empty()) {
-
-                        term = terms.top();
-                        terms.pop();
+                        term = terms.top(); terms.pop();
                         result = eval_terms(op1, result, term);
                     }
                     std::get<2>(*it) = { result };
                     break;
                 }
 
-                auto op2 = operators.top();
-                operators.pop();
+                auto op2 = operators.top(); operators.pop();
 
                 // if I have two operators it means there are at least three terms
-                auto a = terms.top();
-                terms.pop();
-                auto b = terms.top();
-                terms.pop();
-                auto c = terms.top();
-                terms.pop();
+                auto a = terms.top(); terms.pop();
+                auto b = terms.top(); terms.pop();
+                auto c = terms.top(); terms.pop();
 
                 if (precedence[op1] < precedence[op2]) {
                     auto v = eval_terms(op2, c, b);
@@ -278,9 +269,9 @@ int day18(int argc, char** argv)
     std::ifstream in(argv[1]);
     std::string line;
 
-    int64_t sum{0};
+    int64_t sum { 0 };
 
-    while(std::getline(in, line)) {
+    while (std::getline(in, line)) {
         parser p;
         auto tokens = p.parse("(" + line + ")");
         interpreter interp;
