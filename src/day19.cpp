@@ -56,13 +56,9 @@ struct validator {
     {
     }
 
-    std::vector<std::string> enumerate(size_t i /* rule index */, size_t max_size = std::numeric_limits<size_t>::max())
+    std::vector<std::string> enumerate(size_t i /* rule index */)
     {
-        EXPECT(max_size >= 0);
         auto& n = nodes_[i];
-        if (max_size == 0) {
-            return {};
-        }
 
         std::vector<std::string> result;
         if (n.has_val()) {
@@ -73,7 +69,7 @@ struct validator {
         for (auto& rule : n.rules) {
             std::vector<std::vector<std::string>> ranges;
             std::transform(rule.begin(), rule.end(), std::back_inserter(ranges),
-                [&](auto v) { return enumerate(v, max_size - 1); });
+                [&](auto v) { return enumerate(v); });
 
             std::vector<std::string> tmp(ranges.size());
             auto product = [&](size_t i, auto&& rec) {
@@ -92,11 +88,13 @@ struct validator {
         return result;
     }
 
-    auto check(size_t i, std::string_view s) -> std::pair<size_t, bool> {
+    auto check(size_t i, std::string_view s) -> std::pair<size_t, bool>
+    {
         char c = s.front();
 
-        auto &n = nodes_[i];
-        if (n == c) return { 1ul, true };
+        auto& n = nodes_[i];
+        if (n == c)
+            return { 1ul, true };
 
         for (auto const& rule : n.rules) {
             auto matched = 0ul;
@@ -104,7 +102,8 @@ struct validator {
             bool f = true;
             for (auto j : rule) {
                 auto [m, ok] = check(j, q);
-                if(f = ok; !ok) break;
+                if (f = ok; !ok)
+                    break;
                 matched += m;
                 q.remove_prefix(m);
             }
