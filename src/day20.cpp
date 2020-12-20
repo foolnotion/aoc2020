@@ -116,13 +116,10 @@ struct tile {
     template <typename U, typename V>
     bool are_equal(U u, V v) const
     {
-        EXPECT(v.size() == u.size());
-        for (int i = 0; i < v.size(); ++i) {
-            if (v(i) != u(i)) {
-                return false;
-            }
-        }
-        return true;
+        // can't use Eigen because of different dimensions
+        gsl::span<typename U::Scalar> uu(u.data(), u.size());
+        gsl::span<typename V::Scalar> vv(v.data(), v.size());
+        return std::equal(uu.begin(), uu.end(), vv.begin());
     }
 
     template <typename U, typename V>
@@ -254,7 +251,6 @@ int day20(int argc, char** argv)
                 auto const& u = all[i];
                 visited.insert(u.id);
                 auto res = rec(count + 1, rec);
-                    // solution found
                 visited.erase(u.id);
                 if (res) {
                     return true;
@@ -271,27 +267,14 @@ int day20(int argc, char** argv)
                     continue;
                 }
 
-                if (row > 0 && col > 0) {
-                    // check left and top
-                    auto const& v = all[image(row - 1, col)];
-                    auto const& w = all[image(row, col - 1)];
-
-                    if (!(u.match_left(v) && u.match_top(w))) {
-                        continue;
-                    }
-                } else if (row > 0) {
-                    // check left
-                    auto const& v = all[image(row - 1, col)];
-                    if (!u.match_left(v)) {
-                        continue;
-                    }
-                } else if (col > 0) {
-                    // check top
-                    auto const& w = all[image(row, col - 1)];
-                    if (!u.match_top(w)) {
-                        continue;
-                    }
+                if (row > 0 && !u.match_left(all[image(row - 1, col)])) {
+                    continue;
                 }
+
+                if (col > 0 && !u.match_top(all[image(row, col - 1)])) {
+                    continue;
+                }
+
                 visited.insert(u.id);
                 array[count] = i;
                 auto res = rec(count + 1, rec);
@@ -316,14 +299,6 @@ int day20(int argc, char** argv)
     Eigen::Map<Eigen::Matrix<size_t, -1, -1>> map(ids.data(), dim, dim);
     std::cout << map.transpose() << "\n\n";
     Eigen::Array<char, -1, -1> stitched(dim * (D-2), dim * (D-2)); 
-    auto print = [](auto const& mat) {
-        for (int i = 0; i < mat.rows(); ++i) {
-            for (int j = 0; j < mat.cols(); ++j) {
-                fmt::print("{}", mat(i, j));
-            }
-            fmt::print("\n");
-        }
-    };
 
     // assemble the tiles into the final image
     for (int i = 0; i < dim; ++i) {
@@ -332,13 +307,8 @@ int day20(int argc, char** argv)
             stitched.block(i * (D-2), j * (D-2), D-2, D-2) = m.block(1, 1, m.rows()-1, m.cols()-1);
         }
     }
-    
-    fmt::print("stitched image:\n");
-    print(stitched);
     stitched = (stitched == '#').select(stitched, ' ');
     tile<char, -1> img(0, stitched);
-
-    std::cout << img << "\n\n";
 
     std::string s0 = "                  # "; 
     std::string s1 = "#    ##    ##    ###";
@@ -368,8 +338,8 @@ int day20(int argc, char** argv)
         for (int i = 0; i <= g.m.rows() - mon.rows(); ++i) {
             for (int j = 0; j <= g.m.cols() - mon.cols(); ++j) {
                 if (match_monster(g.m.block(i, j, mon.rows(), mon.cols()))) {
-                    fmt::print("found a monster!\n");
                     n -= mon_scales;
+                    j += mon.cols();
                 }
             }
         }
