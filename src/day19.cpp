@@ -88,6 +88,10 @@ struct validator {
         return result;
     }
 
+    // TODO: this method should be adjusted for part two, where
+    // different subrules might match a different amount of letters
+    // therefore we should not return true when the first subrule is matched,
+    // but keep going and return a list of strings (or something)
     auto check(size_t i, std::string_view s) -> std::pair<size_t, bool>
     {
         char c = s.front();

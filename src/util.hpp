@@ -4,7 +4,7 @@
 #include <fmt/color.h>
 #include <fmt/format.h>
 
-#include <Eigen/Eigen>
+#include <Eigen/Core>
 
 #include <algorithm>
 #include <charconv>
@@ -21,6 +21,7 @@
 #include <unordered_set>
 #include <vector>
 #include <deque>
+#include <queue>
 #include <type_traits>
 
 #include <gsl/assert>
