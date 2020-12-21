@@ -1,6 +1,6 @@
-#include <fmt/format.h>
 #include <algorithm>
 #include <bitset>
+#include <fmt/format.h>
 #include <functional>
 #include <robin_hood.h>
 #include <stack>
@@ -16,6 +16,26 @@ struct food {
     {
         std::cout << as_map(f.ingredients).transpose() << " : " << as_map(f.allergens).transpose();
         return os;
+    }
+
+    bool contains_ingredient(std::string const& ingredient) const
+    {
+        return std::binary_search(ingredients.begin(), ingredients.end(), ingredient);
+    }
+
+    bool contains_allergen(std::string const& allergen) const
+    {
+        return std::binary_search(allergens.begin(), allergens.end(), allergen);
+    }
+
+    void remove_ingredient(std::string const& ingredient)
+    {
+        ingredients.erase(std::remove(ingredients.begin(), ingredients.end(), ingredient), ingredients.end());
+    }
+
+    void remove_allergen(std::string const& allergen)
+    {
+        allergens.erase(std::remove(allergens.begin(), allergens.end(), allergen), allergens.end());
     }
 };
 
@@ -57,7 +77,6 @@ int day21(int argc, char** argv)
     }
 
     auto n = ingredients.size();
-
     std::vector<std::pair<std::string, std::string>> list;
 
     while (ingredients.size() != n - allergens.size()) {
@@ -65,29 +84,25 @@ int day21(int argc, char** argv)
             std::vector<std::string> v;
 
             for (auto const& recipe : recipes) {
-                if (!std::binary_search(recipe.allergens.begin(), recipe.allergens.end(), allergen)) {
+                if (!recipe.contains_allergen(allergen)) {
                     continue;
                 }
-
                 if (v.empty()) {
                     v = recipe.ingredients;
                 } else {
-                    v.erase(std::remove_if(v.begin(), v.end(),
-                                [&](auto const& x) { 
-                                    return !std::binary_search(recipe.ingredients.begin(), recipe.ingredients.end(), x); 
-                                }),
-                            v.end());
+                    v.erase(std::remove_if(v.begin(), v.end(), [&](auto const& x) { return !recipe.contains_ingredient(x); }), v.end());
                 }
             }
 
             if (v.size() == 1) {
-                ingredients.erase(v.front());
+                auto const& ingredient = v.front();
+                ingredients.erase(ingredient);
 
-                list.push_back({ v.front(), allergen });
+                list.push_back({ ingredient, allergen });
 
                 for (auto& recipe : recipes) {
-                    recipe.ingredients.erase(std::remove(recipe.ingredients.begin(), recipe.ingredients.end(), v.front()), recipe.ingredients.end());
-                    recipe.allergens.erase(std::remove(recipe.allergens.begin(), recipe.allergens.end(), allergen), recipe.allergens.end());
+                    recipe.remove_ingredient(ingredient);
+                    recipe.remove_allergen(allergen);
                 }
             }
         }
@@ -95,13 +110,7 @@ int day21(int argc, char** argv)
 
     size_t count = 0;
     for (auto const& ingredient : ingredients) {
-        count += std::count_if(recipes.begin(), recipes.end(),
-                [&](auto const& recipe) {
-                    return std::binary_search(
-                            recipe.ingredients.begin(),
-                            recipe.ingredients.end(),
-                            ingredient);
-                    });
+        count += std::count_if(recipes.begin(), recipes.end(), [&](auto const& recipe) { return recipe.contains_ingredient(ingredient); });
     }
     fmt::print("part 1: {}\n", count);
 
