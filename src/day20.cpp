@@ -222,89 +222,86 @@ int day20(int argc, char** argv)
 
     std::vector<Tile> all;
     for (auto const& t : tiles) {
-        auto di_group = t.dihedral_group();
-        for (auto const& u : di_group) {
+        for (auto&& u : t.dihedral_group()) {
             all.push_back(u);
         }
     }
     fmt::print("all tiles size: {}\n", all.size());
 
-    std::vector<size_t> indices(all.size());
-    std::iota(indices.begin(), indices.end(), 0);
-
     robin_hood::unordered_set<size_t> visited;
     std::stack<size_t> ordered;
 
-    Eigen::Matrix<size_t, -1, -1, Eigen::RowMajor> image(dim, dim);
+    Eigen::Matrix<size_t, -1, -1> image(dim, dim);
     gsl::span<size_t> array(image.data(), dim * dim);
 
-    bool found = false;
-
+    size_t steps = 0;
     auto check = [&](size_t count, auto&& rec) -> bool {
+        ++steps;
         if (count == tiles.size()) {
             return true;
         }
 
-        if (count == 0) {
-            for (auto i : indices) {
-                array[0] = i;
-                auto const& u = all[i];
-                visited.insert(u.id);
-                auto res = rec(count + 1, rec);
-                visited.erase(u.id);
-                if (res) {
-                    return true;
-                }
+        auto row = count % dim;
+        auto col = count / dim;
+
+        for (size_t i = 0; i < all.size(); ++i) {
+            auto const& u = all[i];
+
+            if (visited.contains(u.id)) {
+                continue;
             }
-        } else {
-            auto row = count / dim;
-            auto col = count % dim;
 
-            for (auto i : indices) {
-                auto const& u = all[i];
+            if (row > 0 && !u.match_left(all[image(row - 1, col)])) {
+                continue;
+            }
 
-                if (visited.contains(u.id)) {
-                    continue;
-                }
+            if (col > 0 && !u.match_top(all[image(row, col - 1)])) {
+                continue;
+            }
 
-                if (row > 0 && !u.match_left(all[image(row - 1, col)])) {
-                    continue;
-                }
-
-                if (col > 0 && !u.match_top(all[image(row, col - 1)])) {
-                    continue;
-                }
-
-                visited.insert(u.id);
-                array[count] = i;
-                auto res = rec(count + 1, rec);
-                visited.erase(u.id);
-                if (res) {
-                    return true;
-                }
+            visited.insert(u.id);
+            image(row,col) = i;
+            auto res = rec(count + 1, rec);
+            visited.erase(u.id);
+            if (res) {
+                return true;
             }
         }
         return false;
     };
-    if (!check(0, check)) {
+    bool found = false;
+    for (size_t i = 0; i < all.size(); ++i) {
+        image(0,0) = i;
+        auto const& u = all[i];
+        visited.insert(u.id);
+        auto res = check(1, check);
+        visited.erase(u.id);
+        if (res) {
+            found = true;
+            break;
+        }
+    }
+
+    if (!found) {
         fmt::print("unable to find arrangement.");
         exit(1);
     }
+    fmt::print("steps: {}\n", steps);
     std::vector<size_t> ids;
     for (auto i : array) {
         ids.push_back(all[i].id);
     }
 
-    auto const D = Tile::DIMENSION;
+    auto const D = Tile::DIMENSION - 2;
     Eigen::Map<Eigen::Matrix<size_t, -1, -1>> map(ids.data(), dim, dim);
-    std::cout << map.transpose() << "\n\n";
-    Eigen::Array<char, -1, -1> stitched(dim * (D-2), dim * (D-2)); 
+    std::cout << map << "\n\n";
+    Eigen::Array<char, -1, -1> stitched(dim * D, dim * D);
 
     // assemble the tiles into the final image
     for (int i = 0; i < dim; ++i) {
         for (int j = 0; j < dim; ++j) {
-            auto const& m = all[image(i, j)].m.transpose();
-            stitched.block(i * (D-2), j * (D-2), D-2, D-2) = m.block(1, 1, m.rows()-1, m.cols()-1);
+            auto const& m = all[image(i, j)].m;
+            stitched.block(i * D, j * D, D, D) = m.block(1, 1, m.rows()-1, m.cols()-1).transpose();
         }
     }
     stitched = (stitched == '#').select(stitched, ' ');
