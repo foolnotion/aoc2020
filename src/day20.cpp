@@ -116,10 +116,8 @@ struct tile {
     template <typename U, typename V>
     bool are_equal(U u, V v) const
     {
-        // can't use Eigen because of different dimensions
-        gsl::span<typename U::Scalar> uu(u.data(), u.size());
-        gsl::span<typename V::Scalar> vv(v.data(), v.size());
-        return std::equal(uu.begin(), uu.end(), vv.begin());
+        EXPECT(u.size() == v.size());
+        return std::equal(u.data(), u.data() + u.size(), v.data());
     }
 
     template <typename U, typename V>
@@ -233,6 +231,8 @@ int day20(int argc, char** argv)
 
     Eigen::Matrix<size_t, -1, -1> image(dim, dim);
     gsl::span<size_t> array(image.data(), dim * dim);
+
+    std::shuffle(all.begin(), all.end(), std::random_device{});
 
     size_t steps = 0;
     auto check = [&](size_t count, auto&& rec) -> bool {

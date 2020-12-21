@@ -23,6 +23,7 @@
 #include <deque>
 #include <queue>
 #include <type_traits>
+#include <random>
 
 #include <gsl/assert>
 #include <gsl/span>
@@ -93,7 +94,7 @@ static std::vector<T> to_vec(const std::string& s, char delimiter)
 template<typename T, typename U = typename T::value_type>
 Eigen::Map<const Eigen::Matrix<U, Eigen::Dynamic, 1>> as_map(T const& t)
 {
-    return Eigen::Map<const Eigen::Matrix<U, Eigen::Dynamic, 1, Eigen::ColMajor>>(t.data(), t.size());
+    return Eigen::Map<const Eigen::Matrix<U, Eigen::Dynamic, 1>>(t.data(), t.size());
 }
 
 template<typename T>
