@@ -88,17 +88,10 @@ int day22(int argc, char** argv)
     deck<size_t> p1(players[0]);
     deck<size_t> p2(players[1]);
 
-    size_t i1 = 0;
-    size_t i2 = 0;
-
-    hasher<size_t> hash;
-
     using Deck = deck<size_t>;
-    auto game = [](Deck& p1, Deck& p2, auto &&rec, int game_count = 0) -> size_t {
-        ++game_count;
+    auto game = [](Deck& p1, Deck& p2, auto &&rec) -> size_t {
         robin_hood::unordered_set<uint64_t> set;
 
-        int round = 0;
         while(!(p1.empty() || p2.empty())) {
             std::array<uint64_t, 2> hh { p1.hash(), p2.hash() };
             if (auto [it, ok] = set.insert(hasher<uint64_t>{}(hh.data(), hh.size())); !ok) {
@@ -109,7 +102,6 @@ int day22(int argc, char** argv)
             auto c2 = p2.pop_front();
 
             size_t winner;
-
             // If both players have at least as many cards remaining
             // in their deck as the value of the card they just drew,
             // the winner of the round is determined by playing a new game
@@ -132,7 +124,6 @@ int day22(int argc, char** argv)
             }
         }
 
-        --game_count;
         return p1.empty();
     };
 
