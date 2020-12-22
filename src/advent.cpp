@@ -2,5 +2,5 @@
 
 int main(int argc, char** argv)
 {
-    return day21(argc, argv);
+    return day22(argc, argv);
 }

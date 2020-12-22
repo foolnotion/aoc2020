@@ -28,6 +28,9 @@
 #include <gsl/assert>
 #include <gsl/span>
 
+#define XXH_INLINE_ALL
+#include "xxhash.h"
+
 #define EXPECT(cond) \
     if(GSL_UNLIKELY(!(cond))) \
     { \
