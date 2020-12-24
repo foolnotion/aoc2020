@@ -10,20 +10,6 @@
 #include "util.hpp"
 
 template<typename T>
-struct hasher {
-    uint64_t hash(const uint8_t* key, size_t len) noexcept
-    {
-        return XXH3_64bits(key, len);
-    }
-
-    uint64_t operator()(const T* key, size_t len) noexcept
-    {
-        return hash(reinterpret_cast<uint8_t const*>(key),
-                    len * sizeof(T) / sizeof(uint8_t));
-    }
-};
-
-template<typename T>
 struct deck {
 private:
     std::vector<T> v;

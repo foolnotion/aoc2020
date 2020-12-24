@@ -136,13 +136,45 @@ struct point {
     {
         return std::tie(x, y, z) < std::tie(other.x, other.y, other.z);
     }
+
+    friend std::ostream& operator<<(std::ostream& os, point<T> const& p) {
+        os << p.x << " " << p.y << " " << p.z;
+        return os;
+    }
 };
+
+template<typename T>
+struct hasher {
+    uint64_t hash(const uint8_t* key, size_t len) noexcept
+    {
+        return XXH3_64bits(key, len);
+    }
+
+    uint64_t operator()(const T* key, size_t len) noexcept
+    {
+        return hash(reinterpret_cast<uint8_t const*>(key),
+                    len * sizeof(T) / sizeof(uint8_t));
+    }
+};
+
 
 namespace std {
     template <typename T> struct tuple_size<point<T>> : std::integral_constant<size_t, 3> { };
     template <typename T> struct tuple_element<0,point<T>> { using type = T; };
     template <typename T> struct tuple_element<1,point<T>> { using type = T; };
     template <typename T> struct tuple_element<2,point<T>> { using type = T; };
+
+    template<typename T>
+    struct hash<point<T>>
+    {
+        using argument_type = point<T>;
+        using result_type = std::size_t;
+        result_type operator()(argument_type const& p) const
+        {
+            std::array<T, 3> arr { p.x, p.y, p.x };
+            return hasher<T>{}(arr.data(), arr.size());
+        }
+    };
 }
 
 #endif
