@@ -42,25 +42,16 @@ int day24(int argc, char** argv)
     };
 
     auto str2dir = [](std::string_view sv) {
-        if (sv == "e")
-            return DIR::E;
-        if (sv == "se")
-            return DIR::SE;
-        if (sv == "sw")
-            return DIR::SW;
-        if (sv == "w")
-            return DIR::W;
-        if (sv == "nw")
-            return DIR::NW;
-        if (sv == "ne")
-            return DIR::NE;
-
+        if (sv == "e")  return DIR::E;
+        if (sv == "se") return DIR::SE;
+        if (sv == "sw") return DIR::SW;
+        if (sv == "w")  return DIR::W;
+        if (sv == "nw") return DIR::NW;
+        if (sv == "ne") return DIR::NE;
         throw std::runtime_error(fmt::format("unknown direction: {}\n", sv));
     };
 
     robin_hood::unordered_flat_map<point_t, int64_t> flipped;
-
-    point_t const center { 0, 0, 0 };
 
     while (std::getline(in, line)) {
         size_t i = 0, j = 0;
@@ -82,7 +73,7 @@ int day24(int argc, char** argv)
             directions.push_back(str2dir(sv));
         }
 
-        auto p = center;
+        point_t p{0,0,0};
         for (auto dir : directions) {
             auto [x, y, z] = p;
             auto [dx, dy, dz] = moves[dir];
@@ -94,26 +85,23 @@ int day24(int argc, char** argv)
     int black = std::count_if(flipped.begin(), flipped.end(), [](auto const& it) { return it.second % 2; });
     fmt::print("part 1: {}\n", black);
 
-    black = 0;
-
-    std::vector<point_t> tiles_to_flip;
-    std::vector<point_t> nn;
+    std::vector<point_t> tiles;
     for (int i = 0; i < 100; ++i) {
-        tiles_to_flip.clear();
-        nn.clear();
+        tiles.clear();
 
         // gather all neighbours
         for (auto const& [p, f] : flipped) {
             for (auto const& [dx, dy, dz] : moves) {
                 point_t q{ p.x+dx, p.y+dy, p.z+dz };
-                nn.push_back(q);
+                tiles.push_back(q);
             }
         }
 
-        for (auto const& n : nn) {
+        for (auto const& n : tiles) {
             flipped.try_emplace(n, 0);
         }
 
+        tiles.clear();
         for (auto const& [p, f] : flipped) {
             bool b = f % 2; // true-black, false-white
             auto [x, y, z] = p;
@@ -128,11 +116,11 @@ int day24(int argc, char** argv)
             }
 
             if ((b && (count == 0 || count > 2)) || (!b && count == 2) ) {
-                tiles_to_flip.push_back(p);
+                tiles.push_back(p);
             }
         }
 
-        for (auto const& t : tiles_to_flip) {
+        for (auto const& t : tiles) {
             auto it = flipped.find(t);
             ++it->second;
         }
