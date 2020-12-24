@@ -21,7 +21,7 @@ int day23(int argc, char** argv)
     //std::vector<int> cups { 3, 8, 9, 1, 2, 5, 4, 6, 7 };
     std::vector<int> cups { 6, 2, 4, 3, 9, 7, 1, 5, 8 };
 
-    std::vector<node*> index(1'000'000);
+    std::vector<node*> index(1'000'000 + 1);
 
     std::vector<node> nodes(1'000'000);
 
@@ -33,9 +33,7 @@ int day23(int argc, char** argv)
             nodes[i - 1].next = &nodes[i];
         }
     }
-    size_t count = 0;
     for (int i = cups.size(); i < 1'000'000; ++i) {
-        ++count;
         nodes[i] = { i+1, nullptr };
         index[nodes[i].value] = &nodes[i];
 
