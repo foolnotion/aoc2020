@@ -12,13 +12,13 @@
 #include "advent.hpp"
 #include "util.hpp"
 
-template <class T>
+template<typename T>
 T mul_mod(T a, T b, T m)
 {
     if (m == 0)
         return a * b;
 
-    T r = T();
+    T r{0};
 
     while (a > 0) {
         if (a & 1)
@@ -31,10 +31,10 @@ T mul_mod(T a, T b, T m)
     return r;
 }
 
-template <class T>
+template<typename T>
 T pow_mod(T a, T n, T m)
 {
-    T r = 1;
+    T r{1};
 
     while (n > 0) {
         if (n & 1)
